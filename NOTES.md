@@ -184,3 +184,51 @@ Stop and remove:
 docker rm -f journal-api
 ```
 
+## GitHub Actions Build & Push
+
+To build and push the Docker image to a registry automatically when pushing to the `main` branch, use a GitHub Actions workflow like the one defined in [docker-publish.yml](file:///Users/mac/Desktop/DevOps/Project/Container/.github/workflows/docker-publish.yml).
+
+### Workflow Steps
+
+1. **Trigger**: Runs on any push to the `main` branch.
+2. **Checkout**: Pulls the repository code using `actions/checkout@v4`.
+3. **Build**: Builds the Docker image and tags it with the commit SHA:
+   ```bash
+   docker build -t generousdev/journal-api:${{ github.sha }} .
+   ```
+4. **Login**: Logs in to the Docker registry (Docker Hub) using credentials stored in repository secrets:
+   ```bash
+   echo ${{ secrets.REGISTRY_PASSWORD }} | docker login -u ${{ secrets.REGISTRY_USER }} --password-stdin
+   ```
+5. **Push**: Pushes the built image to the registry:
+   ```bash
+   docker push generousdev/journal-api:${{ github.sha }}
+   ```
+
+### Setup Registry Credentials
+
+Before this workflow can run successfully, you need to configure your Docker Hub credentials in GitHub Secrets:
+
+#### Step 1: Create a Personal Access Token (PAT) on Docker Hub
+Using a Personal Access Token (PAT) is the secure and recommended way to authenticate GitHub Actions with Docker Hub instead of using your actual account password.
+
+1. Sign in to [hub.docker.com](https://hub.docker.com/).
+2. Click your profile picture in the top-right corner and select **Account Settings**.
+3. Navigate to **Security** in the left-hand sidebar.
+4. Click **New Access Token**.
+5. Give it a description (e.g., `github-actions-publish`) and set the Access permissions to **Read & Write** (or **Read, Write, Delete**).
+6. Click **Generate** and **copy the generated token immediately** (you won't be able to see it again).
+
+#### Step 2: Add the Secrets to GitHub
+
+1. Open your repository on GitHub.
+2. Go to **Settings** (gear icon) > **Secrets and variables** > **Actions**.
+3. Click **New repository secret**.
+4. Add the registry username:
+   * **Name**: `REGISTRY_USER`
+   * **Secret**: `generousdev` (your Docker Hub username)
+5. Click **New repository secret** again to add the token:
+   * **Name**: `REGISTRY_PASSWORD`
+   * **Secret**: *Paste the Access Token you copied from Step 1*
+
+
