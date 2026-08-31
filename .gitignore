@@ -3,5 +3,5 @@ __pycache__/
 .pytest_cache/
 *.pyc
 
-# Local documentation (ignored as requested)
-WORKFLOWS.md
+# Local documentation & notes folder
+NOTE/
