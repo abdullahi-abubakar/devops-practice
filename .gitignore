@@ -1,0 +1,7 @@
+# Python caches
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# Local documentation (ignored as requested)
+WORKFLOWS.md

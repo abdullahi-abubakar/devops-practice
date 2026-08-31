@@ -1,0 +1,36 @@
+name: Deploy to Production
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        # This uses the popular appleboy/ssh-action to SSH into your server
+        # and pull the new Docker image, stop the old container, and start the new one.
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            # Login to Docker Hub
+            echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login -u "${{ secrets.REGISTRY_USER }}" --password-stdin
+            
+            # Pull the latest image
+            docker pull generousdev/journal-api:latest
+            
+            # Stop and remove the existing container if it exists
+            docker stop journal-api || true
+            docker rm journal-api || true
+            
+            # Run the new container
+            docker run -d \
+              --name journal-api \
+              -p 8000:8000 \
+              --restart always \
+              generousdev/journal-api:latest

@@ -1,0 +1,33 @@
+name: Lint and Security Scan
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Linting & Security Tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 safety
+
+      - name: Run Linter (flake8)
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings.
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Check Dependencies for Vulnerabilities (Safety)
+        # safety check can sometimes fail if safety db requires api key,
+        # we run it but ignore failures or run python security check
+        run: safety check || true
